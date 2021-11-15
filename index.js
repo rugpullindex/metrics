@@ -1,24 +1,23 @@
-const { Client, Intents } = require('discord.js');
-const dotenv = require('dotenv');
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+import dotenv from "dotenv";
+import fetch from "cross-fetch";
 
 dotenv.config();
-clientId = process.env.CLIENT_ID
-guildId = process.env.GUILD_ID
-token = process.env.DISCORD_TOKEN
 
-async function getMembers(GUILD_ID){
-	let count = 0;
-	//client.login(token);
-	count = client.guilds.cache.get(guildId).memberCount;
-	console.log("member count==>" +count);
-	return client.guilds.cache.get(guildId).memberCount;
-}
+const guildId = process.env.GUILD_ID;
+const token = process.env.DISCORD_TOKEN;
+const baseUrl = process.env.BASE_URL.endsWith("/")
+  ? process.env.BASE_URL.slice(0, -1)
+  : process.env.BASE_URL;
 
+const getMembersCount = async () => {
+  const res = await fetch(`${baseUrl}/guilds/${guildId}?with_counts=true`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bot ${token}`,
+    },
+  });
 
-client.once('ready', () => {
-	getMembers(guildId);
-});
-client.login(token);
+  return (await res.json()).approximate_member_count;
+};
 
-module.exports = { getMembers, client };
+export default getMembersCount;

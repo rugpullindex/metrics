@@ -1,37 +1,24 @@
-const test = require('ava');
-const { Client, Intents } = require('discord.js');
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
-const dotenv = require('dotenv');
-const bot = require('../index');
+import test from "ava";
+import esmock from "esmock";
+import fetchMock from "fetch-mock";
+import dotenv from "dotenv";
+
 dotenv.config();
-clientId = process.env.CLIENT_ID
-guildId = process.env.GUILD_ID
-token = process.env.DISCORD_TOKEN
 
-//const {promisify} = require('util');
+test("if client can get member count", async (t) => {
+  const COUNT = 40;
 
-const getMembers = async () => {
-  await bot.client.login(token);
-  let val = await bot.getMembers(guildId);
-  return val;
-};
+  const { default: getMembersCount } = await esmock("../index.js", {
+    "cross-fetch": {
+      default: fetchMock.sandbox().get(
+        {
+          url: `begin:${process.env.BASE_URL}`,
+        },
+        { approximate_member_count: COUNT }
+      ),
+    },
+  });
 
-test('if client can get member count', async t => {
-  await client.login(token);
-  let count = await client.guilds.cache.get(guildId).memberCount;
-  console.log("count::::::>" +count );
-  let members = await getMembers();
-  console.log("members::::::>" +members );
-  //const members = await promisify(bot.getMembers)(guildId);
-  t.is(count, members);
+  const count = await getMembersCount();
+  t.is(count, COUNT);
 });
-
-/**
-let guildId = '';
-client.on('ready', () => {
-...
-... const guild = client.guilds.cache.get(guildId);
-... const count = guild.memberCount;
-... });
-
-**/
